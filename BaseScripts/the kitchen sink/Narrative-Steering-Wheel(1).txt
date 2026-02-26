@@ -1,0 +1,160 @@
+
+//Library - Narrative Steering Wheel Script
+function getAuthorsNoteWithMemory(state) {
+  let baseNote = state.baseAuthorsNote || "";  // Existing author's notes or default
+
+  // Gather all memories with their expiration values
+  const memorySlots = [
+    { memory: state.memory1, expiration: state.expiration1 },
+    { memory: state.memory2, expiration: state.expiration2 },
+    { memory: state.memory3, expiration: state.expiration3 }
+  ];
+
+  // Sort by expiration, descending (most recent first)
+  memorySlots.sort((a, b) => (b.expiration || 0) - (a.expiration || 0));
+
+  // Only include non-empty memories
+  const memories = memorySlots
+    .map(slot => slot.memory)
+    .filter(Boolean);
+
+  // Determine input/output reference
+  let inputOrOutput = state.input1 && state.input1.trim()
+    ? state.input1
+    : (state.output1 || "");
+
+  if (memories.length > 0) {
+    let memoryNotes = `Immediately after the phrase (${inputOrOutput}), flawlessly transition the story towards the following: ` +
+      memories.join(", ") +
+      `. Move the story along with the themes of ${memories.join(", ")}.`;
+
+    baseNote = memoryNotes + " " + baseNote;
+  }
+
+  return baseNote.trim();
+}
+
+
+
+
+
+
+//Input Narrative Steering Wheel Script
+
+const modifier = (text) => {
+  
+
+
+// state variables
+state.memory1 = state.memory1 || "";
+state.memory2 = state.memory2 || "";
+state.memory3 = state.memory3 || "";
+state.input1  = state.input1  || "";
+state.output1 = state.output1 || "";
+state.memory = state.memory || {};
+
+// Cleanup expired memories
+if (state.expiration1 && info.actionCount > state.expiration1) {
+  state.memory1 = "";
+  state.expiration1 = null;
+}
+
+if (state.expiration2 && info.actionCount > state.expiration2) {
+  state.memory2 = "";
+  state.expiration2 = null;
+}
+
+if (state.expiration3 && info.actionCount > state.expiration3) {
+  state.memory3 = "";
+  state.expiration3 = null;
+}
+
+
+const lower = text.toLowerCase();
+
+// Match any text wrapped in parentheses
+const parenthesisMatch = text.match(/\(([^)]+)\)/);
+
+if (parenthesisMatch) {
+  // Extract the content inside the parentheses
+  const phrase = parenthesisMatch[1].trim();
+
+  // Check and assign to the first available memory slot
+  if (!state.memory1) {
+    state.memory1 = phrase;
+    state.expiration1 = info.actionCount + 4;
+  } else if (!state.memory2) {
+    state.memory2 = phrase;
+    state.expiration2 = info.actionCount + 4;
+  } else if (!state.memory3) {
+    state.memory3 = phrase;
+    state.expiration3 = info.actionCount + 4;
+  }
+
+  // Remove the parentheses and everything inside them from the text
+  text = text.replace(/\([^)]*\)/g, "").trim();
+  if (!text) {
+    text = ".";
+  }
+  // Get the last 5 words of the remaining text
+  const words = text.split(/\s+/).filter(Boolean); // split and remove empty entries
+  if (words.length >= 5) {
+    state.input1 = words.slice(-5).join(" ");
+  } else {
+    state.input1 = ""; // Not enough words
+  }
+//Capture Author's notes
+
+}
+
+state.memory.authorsNote = getAuthorsNoteWithMemory(state);
+
+
+  return { text }
+}
+
+modifier(text)
+
+
+
+
+
+// Context Narrative Steering Wheel Script
+
+
+const modifier = (text) => {
+
+state.memory.authorsNote = getAuthorsNoteWithMemory(state);
+
+  return { text }
+}
+
+modifier(text)
+
+
+
+
+
+// Output Narrative Steering Wheel Script
+
+
+const modifier = (text) => {
+
+console.log(`[DEBUG] actionCount: ${info.actionCount}`);
+
+
+state.memory.authorsNote = getAuthorsNoteWithMemory(state);
+
+  if (text) {
+  let cleaned = text.trim();  // clean trailing spaces
+  let words = cleaned.split(/\s+/);  // split by spaces
+  let lastFive = words.slice(-5).join(" ");  // last 5 words
+  state.output1 = lastFive;
+}
+state.input1  = "";
+
+
+  return { text }
+}
+
+modifier(text)

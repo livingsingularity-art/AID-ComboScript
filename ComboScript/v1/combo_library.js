@@ -8946,31 +8946,29 @@ globalThis.BonepokeOS = (function() {
 
   // ── 3. ARCHETYPES ──────────────────────────────────────────────────────
 
+  // ARCHETYPES — plain data only, NO functions.
+  // AI Dungeon's isolated-vm uses structured cloning on state. Functions cannot
+  // be cloned. Archetype selection logic lives in selectArchetype() instead.
   var ARCHETYPES = {
     OBSERVER: {
       id: 'OBSERVER', mandate: 'BASELINE_COHERENCE',
-      note: 'Ground the scene in sensory detail. What can be seen, heard, felt.',
-      trigger: function(e, b) { return b <= 0.3 && e <= 0.3; }
+      note: 'Ground the scene in sensory detail. What can be seen, heard, felt.'
     },
     SHERLOCK: {
       id: 'SHERLOCK', mandate: 'TRUTH_OVER_COHESION',
-      note: 'Enforce cause-and-effect. Actions have consequences. Details matter. No convenient coincidences.',
-      trigger: function(e, b) { return b > 0.3 && b <= 0.6 && e < 0.3; }
+      note: 'Enforce cause-and-effect. Actions have consequences. Details matter. No convenient coincidences.'
     },
     JESTER: {
       id: 'JESTER', mandate: 'CREATIVITY_OVER_SAFETY',
-      note: 'High fatigue, low tension. Break the loop. Something unexpected happens. Subvert the obvious.',
-      trigger: function(e, b) { return e >= THRESHOLDS.jesterEMin && b < THRESHOLDS.jesterBetaMax; }
+      note: 'High fatigue, low tension. Break the loop. Something unexpected happens. Subvert the obvious.'
     },
     WOUNDED_HEALER: {
       id: 'WOUNDED_HEALER', mandate: 'DEPTH_OVER_BREADTH',
-      note: 'Hold contradictions without resolving them. Let opposing emotions coexist. Emotional complexity.',
-      trigger: function(e, b) { return b >= THRESHOLDS.healerBetaMin; }
+      note: 'Hold contradictions without resolving them. Let opposing emotions coexist. Emotional complexity.'
     },
     CALCIFIER: {
       id: 'CALCIFIER', mandate: 'STRUCTURE_OVER_CHAOS',
-      note: 'Both metrics elevated. Crystallize volatile material into stable narrative form.',
-      trigger: function(e, b) { return e > 0.3 && b > 0.5; }
+      note: 'Both metrics elevated. Crystallize volatile material into stable narrative form.'
     }
   };
 
@@ -9156,10 +9154,11 @@ globalThis.BonepokeOS = (function() {
 
   function selectArchetype(e, beta, forced) {
     if (forced && ARCHETYPES[forced]) return ARCHETYPES[forced];
-    if (ARCHETYPES.WOUNDED_HEALER.trigger(e, beta)) return ARCHETYPES.WOUNDED_HEALER;
-    if (ARCHETYPES.JESTER.trigger(e, beta)) return ARCHETYPES.JESTER;
-    if (ARCHETYPES.CALCIFIER.trigger(e, beta)) return ARCHETYPES.CALCIFIER;
-    if (ARCHETYPES.SHERLOCK.trigger(e, beta)) return ARCHETYPES.SHERLOCK;
+    // Selection logic inlined — no functions on archetype objects (isolated-vm safe)
+    if (beta >= THRESHOLDS.healerBetaMin) return ARCHETYPES.WOUNDED_HEALER;
+    if (e >= THRESHOLDS.jesterEMin && beta < THRESHOLDS.jesterBetaMax) return ARCHETYPES.JESTER;
+    if (e > 0.3 && beta > 0.5) return ARCHETYPES.CALCIFIER;
+    if (beta > 0.3 && beta <= 0.6 && e < 0.3) return ARCHETYPES.SHERLOCK;
     return ARCHETYPES.OBSERVER;
   }
 

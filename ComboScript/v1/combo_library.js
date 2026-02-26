@@ -9291,6 +9291,13 @@ globalThis.BonepokeOS = (function() {
 
   // ── 15. FULL INGEST ────────────────────────────────────────────────────
 
+  // Strip trigger functions from archetype objects before returning from ingest().
+  // AI Dungeon's isolated-vm uses structured cloning on state — functions cannot be cloned.
+  // Only id, mandate, and note are needed downstream (Arbiter, dashboard, authorsNote).
+  function serializableArchetype(arch) {
+    return { id: arch.id, mandate: arch.mandate, note: arch.note };
+  }
+
   function ingest(fragment, bpState, forcedArchetype) {
     bpState = bpState || {};
     bpState.tick = bpState.tick || 0;
@@ -9301,7 +9308,7 @@ globalThis.BonepokeOS = (function() {
     bpState.history = bpState.history || [];
 
     if (fragment.length < THRESHOLDS.minFragmentLength) {
-      return { vanillaOk: false, state: 'GOLD', e: 0, beta: 0, lsc: 1, archetype: ARCHETYPES.OBSERVER,
+      return { vanillaOk: false, state: 'GOLD', e: 0, beta: 0, lsc: 1, archetype: serializableArchetype(ARCHETYPES.OBSERVER),
                correction: { type: 'NONE', instruction: '' }, marm: 'suppressed',
                contradictions: [], fatigue: {}, drift: [], slopResult: { slopHits: 0, sycophancyHits: 0, total: 0 },
                toneScores: { lift: 0, drop: 0, shear: 0, invert: 0, dominant: 'neutral', intensity: 0 },
@@ -9368,7 +9375,7 @@ globalThis.BonepokeOS = (function() {
       e: Math.round(e * 100) / 100,
       beta: Math.round(beta * 100) / 100,
       lsc: Math.round(lsc * 100) / 100,
-      state: symbolicState, archetype: archetype, correction: correction, marm: marm,
+      state: symbolicState, archetype: serializableArchetype(archetype), correction: correction, marm: marm,
       contradictions: contradictions, fatigue: fatigue, drift: drift,
       slopResult: slopResult, toneScores: toneScores, symbolism: symbolism,
       shimmerSafe: bpState.shimmerUsed < THRESHOLDS.shimmerLimit,
